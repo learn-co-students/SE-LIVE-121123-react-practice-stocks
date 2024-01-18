@@ -6,6 +6,8 @@ import SearchBar from "./SearchBar";
 function MainContainer() {
   const [stocks, setStocks] = useState([]);
   const [portfolio, setPortfolio] = useState([]);
+  const [sortBy, setSortBy] = useState("")
+  const [filterBy, setFilterBy] = useState("")
 
   useEffect(() => {
     fetch("http://localhost:3001/stocks")
@@ -13,9 +15,11 @@ function MainContainer() {
       .then((stocksArr) => setStocks(stocksArr));
   }, []);
 
-  function addToPortfolio(stockObj) {
-    console.log("🚀 ~ addToPortfolio ~ stockObj:", stockObj);
-    setPortfolio([...portfolio, stockObj]);
+  function addToPortfolio(stockToAdd) {
+    console.log("🚀 ~ addToPortfolio ~ stockToAdd:", stockToAdd);
+    if(!portfolio.some(stock => stock.id === stockToAdd.id)) {
+      setPortfolio([...portfolio, stockToAdd]);
+    }
   }
 
   function removeFromPortfolio(stockObj) {
@@ -23,13 +27,28 @@ function MainContainer() {
     setPortfolio(portfolio.filter(stock => stock.id !== stockObj.id))
   }
 
+  const stocksToDisplay = [...stocks]
+    .sort((stock1, stock2) => {
+      if (sortBy == "Alphabetically"){
+        return stock1.ticker.localeCompare(stock2.ticker)
+      } else if (sortBy == "Price"){
+        return stock1.price - stock2.price
+      }
+    })
+    .filter(stock => stock.type.includes(filterBy))
+
   return (
     <div>
-      <SearchBar />
+      <SearchBar 
+        sortBy={sortBy}
+        onChangeSort={setSortBy}
+        filterBy={filterBy}
+        onChangeFilter={setFilterBy}
+      />
       <div className="row">
         <div className="col-8">
           <StockContainer
-            stocks={stocks}
+            stocks={stocksToDisplay}
             onClickStock={addToPortfolio}
           />
         </div>
